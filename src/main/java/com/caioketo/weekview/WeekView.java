@@ -159,7 +159,6 @@ public class WeekView extends View {
                 }
             }
             if (!mEvent && mTimeClickListener != null) {
-                //TODO: get time and day
                 int mClickedHour = -1;
                 for (int i = 0; i < 24; i++) {
                     if (i == 23) {
@@ -418,14 +417,14 @@ public class WeekView extends View {
             }
         }
 
-        for (int dayNumber = leftDaysWithGaps + 1;
-             dayNumber <= leftDaysWithGaps + mNumberOfVisibleDays + 1;
+        for (int dayNumber = 1;
+             dayNumber <= 7;
              dayNumber++) {
 
             // Check if the day is today.
             day = (Calendar) mToday.clone();
             day.add(Calendar.DATE, dayNumber - 1);
-            boolean sameDay = isSameDay(day, mToday);
+            boolean sameDay = false;
 
             // Get more events if necessary. We want to store the events 3 months beforehand. Get
             // events only when it is the first iteration of the loop.
@@ -453,7 +452,7 @@ public class WeekView extends View {
             canvas.drawLines(hourLines, mHourSeparatorPaint);
 
             // Draw the events.
-            drawEvents(day, startPixel, canvas);
+            drawEvents(dayNumber, startPixel, canvas);
 
             startPixel += mWidthPerDay + mColumnGap;
         }
@@ -469,7 +468,6 @@ public class WeekView extends View {
             day.add(Calendar.DATE, dayNumber - 1);
             boolean sameDay = isSameDay(day, mToday);
 
-            //TODO store day lefts
             int dayOfWeek = day.get(Calendar.DAY_OF_WEEK) - 1;
             mDaysLefts[dayOfWeek] = startPixel + mWidthPerDay / 2;
             Log.d("DaysLefts", "Day (" + Integer.toString(dayOfWeek) + ") x: " + Float.toString(mDaysLefts[dayOfWeek]));
@@ -494,17 +492,16 @@ public class WeekView extends View {
 
     /**
      * Draw all the events of a particular day.
-     * @param date The day.
+     * @param day The day.
      * @param startFromPixel The left position of the day area. The events will never go any left from this value.
      * @param canvas The canvas to draw upon.
      */
-    private void drawEvents(Calendar date, float startFromPixel, Canvas canvas) {
+    private void drawEvents(int day, float startFromPixel, Canvas canvas) {
         if (mEventRects != null && mEventRects.size() > 0) {
 
 
             for (int i = 0; i < mEventRects.size(); i++) {
-                if ((isSameDay(mEventRects.get(i).event.getStartTime(), date)) ||
-                        (mEventRects.get(i).event.getDayOfWeek() > -1 && mEventRects.get(i).event.getDayOfWeek() == date.get(Calendar.DAY_OF_WEEK))) {
+                if ((mEventRects.get(i).event.getDayOfWeek() > -1 && mEventRects.get(i).event.getDayOfWeek() == day)) {
 
                     // Calculate top.
                     float top = mEventRects.get(i).event.getStartTime().get(Calendar.HOUR_OF_DAY) * 60 + mEventRects.get(i).event.getStartTime().get(Calendar.MINUTE);
@@ -553,6 +550,7 @@ public class WeekView extends View {
     private void drawText(String text, RectF rect, Canvas canvas, float originalTop, float originalLeft) {
         if (rect.right - rect.left - mEventPadding * 2 < 0) return;
 
+
         // Get text dimensions
         StaticLayout mTextLayout = new StaticLayout(text, mEventTextPaint, (int) (rect.right - originalLeft - mEventPadding * 2), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
 
@@ -597,7 +595,6 @@ public class WeekView extends View {
     private void getMoreEvents(Calendar day) {
 
         if (mEventRects != null) {
-            //TODO ignore event requesting as it wont change month
             return;
         }
         // Delete all events if its not current month +- 1.
